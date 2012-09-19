@@ -741,6 +741,8 @@ enum wl12xx_generic_cfg {
 };
 
 struct wl12xx_cmd_generic_cfg {
+	struct wl1271_cmd_header header;
+
 	u8 role_id;
 	u8 index;
 	u8 status;
