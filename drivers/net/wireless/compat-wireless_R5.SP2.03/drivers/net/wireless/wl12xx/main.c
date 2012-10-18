@@ -304,7 +304,7 @@ static struct conf_drv_settings default_conf = {
 		.forced_ps                   = false,
 		.keep_alive_interval         = 55000,
 		.max_listen_interval         = 20,
-		.elp_timeout                 = 200,
+		.elp_timeout                 = 20,
 	},
 	.itrim = {
 		.enable = false,

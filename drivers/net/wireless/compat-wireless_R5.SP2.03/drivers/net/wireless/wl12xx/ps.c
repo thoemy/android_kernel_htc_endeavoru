@@ -101,8 +101,6 @@ out:
 	mutex_unlock(&wl->mutex);
 }
 
-#define ELP_ENTRY_DELAY  5
-
 /* Routines to toggle sleep mode while in ELP */
 void wl1271_ps_elp_sleep(struct wl1271 *wl)
 {
@@ -122,11 +120,7 @@ void wl1271_ps_elp_sleep(struct wl1271 *wl)
 			return;
 	}
 
-	if (wl->conf.conn.forced_ps)
-		timeout = ELP_ENTRY_DELAY;
-	else
-		timeout = ELP_ENTRY_DELAY; //wl->conf.conn.elp_timeout; //HTC_WIFI, reduce the delay before we send ELP command
-
+	timeout = wl->conf.conn.elp_timeout; // HTC_WIFI, was timeout = ELP_ENTRY_DELAY; ELP_ENTRY_DELAY is 5
 	ieee80211_queue_delayed_work(wl->hw, &wl->elp_work,
 				     msecs_to_jiffies(timeout));
 }
