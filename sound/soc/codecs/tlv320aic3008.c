@@ -1290,6 +1290,7 @@ static long aic3008_ioctl(struct file *file, unsigned int cmd,
 		break;
 
 	/* third io command from HAL */
+	case AIC3008_IO_SET_DSP_PARAM_ICS:
 	case AIC3008_IO_SET_DSP_PARAM:
 		if (copy_from_user(&para, (void *) argc, sizeof(para))) {
 			AUD_ERR("failed on copy_from_user\n");
