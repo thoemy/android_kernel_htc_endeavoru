@@ -1666,9 +1666,15 @@ static void endeavoru_usb_init(void)
 	android_usb_pdata.serial_number = board_serialno();
 	android_usb_pdata.products[0].product_id = android_usb_pdata.product_id;
 
+#if 0
+        /* For a normal boot MFG mode is set to normal which will set the first
+           LUN to simulate a cdrom instead of a disk. This has the negative
+           effect of being read-only. Therefore disable this.
+        */
 	if (board_mfg_mode() == BOARD_MFG_MODE_NORMAL /* normal mode */) {
 		android_usb_pdata.cdrom_lun = 0x1;
 	}
+#endif
 
 	platform_device_register(&android_usb_device);
 }
