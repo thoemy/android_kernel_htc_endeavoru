@@ -649,7 +649,7 @@ static struct htc_headset_pmic_platform_data htc_headset_pmic_data_xe = {
 	.driver_flag	= DRIVER_HS_PMIC_RPC_KEY,
 	.adc_mic_bias	= {HS_DEF_MIC_ADC_12_BIT_MIN,
 				   HS_DEF_MIC_ADC_12_BIT_MAX},
-	.adc_remote	= {0, 164, 165, 379, 380, 830},
+	.adc_remote	= {0, 125, 126, 330, 331, 710},
 };
 
 static struct platform_device htc_headset_pmic_xe = {
@@ -664,31 +664,26 @@ static struct headset_adc_config htc_headset_mgr_config_xe[] = {
 	{
 		.type = HEADSET_UNPLUG,
 		.adc_max = 4095,
-		.adc_min = 3601,
+		.adc_min = 3804,
 	},
 	{
 		.type = HEADSET_MIC,
-		.adc_max = 3600,
-		.adc_min = 2951,
+		.adc_max = 3803,
+		.adc_min = 2500,
 	},
 	{
 		.type = HEADSET_BEATS,
-		.adc_max = 2950,
-		.adc_min = 2101,
+		.adc_max = 2499,
+		.adc_min = 1800,
 	},
 	{
 		.type = HEADSET_BEATS_SOLO,
-		.adc_max = 2100,
-		.adc_min = 1500,
-	},
-	{
-		.type = HEADSET_MIC,
-		.adc_max = 1499,
-		.adc_min = 1150,
+		.adc_max = 1799,
+		.adc_min = 1175,
 	},
 	{
 		.type = HEADSET_NO_MIC,
-		.adc_max = 1149,
+		.adc_max = 1174,
 		.adc_min = 0,
 	},
 };
