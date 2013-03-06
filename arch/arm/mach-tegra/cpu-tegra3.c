@@ -33,7 +33,6 @@
 #include <linux/debugfs.h>
 #include <linux/seq_file.h>
 #include <linux/pm_qos_params.h>
-#include <linux/cpu_debug.h>
 #include <mach/mfootprint.h>
 
 #include "pm.h"
@@ -203,7 +202,7 @@ static struct kernel_param_ops tegra_hp_state_ops = {
 module_param_cb(auto_hotplug, &tegra_hp_state_ops, &hp_state, 0644);
 
 enum {
-	TEGRA_CPU_SPEED_BALANCED,
+	TEGRA_CPUSPEED_BALANCED,
 	TEGRA_CPU_SPEED_BIASED,
 	TEGRA_CPU_SPEED_SKEWED,
 };
@@ -312,7 +311,6 @@ static void tegra_auto_hotplug_work_func(struct work_struct *work)
 			   !pm_qos_request(PM_QOS_MIN_ONLINE_CPUS) &&
 			   ((now - last_change_time) >= down_delay)) {
 			if(!clk_set_parent(cpu_clk, cpu_lp_clk)) {
-				CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG, " enter LPCPU");
 				hp_stats_update(CONFIG_NR_CPUS, true);
 				hp_stats_update(0, false);
 				/* catch-up with governor target speed */
@@ -326,8 +324,6 @@ static void tegra_auto_hotplug_work_func(struct work_struct *work)
 	case TEGRA_HP_UP:
 		if (is_lp_cluster() && !no_lp) {
 			if(!clk_set_parent(cpu_clk, cpu_g_clk)) {
-				CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG,
-						 " leave LPCPU (%s)", __func__);
 				last_change_time = now;
 				hp_stats_update(CONFIG_NR_CPUS, false);
 				hp_stats_update(0, true);
@@ -371,20 +367,6 @@ static void tegra_auto_hotplug_work_func(struct work_struct *work)
 		hp_stats_update(cpu, up);
 	}
 	mutex_unlock(tegra3_cpu_lock);
-
-	if (system_state > SYSTEM_RUNNING) {
-		CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG, " system is not running\n");
-	} else if (cpu < nr_cpu_ids) {
-		if (up) {
-			cpu_up(cpu);
-			CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG, " turn on CPU %d, online CPU 0-3=[%d%d%d%d]\n",
-					cpu, cpu_online(0), cpu_online(1), cpu_online(2), cpu_online(3));
-		} else {
-			cpu_down(cpu);
-			CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG, " turn off CPU %d, online CPU 0-3=[%d%d%d%d]\n",
-					cpu, cpu_online(0), cpu_online(1), cpu_online(2), cpu_online(3));
-		}
-	}
 }
 
 static int min_cpus_notify(struct notifier_block *nb, unsigned long n, void *p)
@@ -398,8 +380,6 @@ static int min_cpus_notify(struct notifier_block *nb, unsigned long n, void *p)
 		tegra_update_cpu_speed(speed);
 
 		if (!clk_set_parent(cpu_clk, cpu_g_clk)) {
-			CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG,
-					 " leave LPCPU (%s)", __func__);
 			last_change_time = jiffies;
 			hp_stats_update(CONFIG_NR_CPUS, false);
 			hp_stats_update(0, true);
@@ -431,8 +411,6 @@ void tegra_auto_hotplug_governor(unsigned int cpu_freq, bool suspend)
 		/* Switch to G-mode if suspend rate is high enough */
 		if (is_lp_cluster() && (cpu_freq >= idle_bottom_freq)) {
 			if (!clk_set_parent(cpu_clk, cpu_g_clk)) {
-				CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG,
-						 " leave LPCPU (%s)", __func__);
 				hp_stats_update(CONFIG_NR_CPUS, false);
 				hp_stats_update(0, true);
 			}

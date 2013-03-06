@@ -27,7 +27,6 @@
 #include <linux/slab.h>
 #include <linux/syscalls.h>
 #include <linux/highuid.h>
-#include <linux/cpu_debug.h>
 #include <linux/kthread.h>
 
 /* Google systrace just supports Interactive governor (option -l)
@@ -802,13 +801,6 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
     if (policy->cur < policy->min) {
         dbs_freq_increase(policy, debug_load, policy->min);
 
-        CPU_DEBUG_PRINTK(CPU_DEBUG_GOVERNOR,
-                         " cpu%d,"
-                         " load=%3u, iowait=%3u,"
-                         " freq=%7u(%7u), counter=%d, phase=%d, min_freq=%7u",
-                         policy->cpu,
-                         debug_load, debug_iowait,
-                         policy->min, policy->cur, counter, phase, policy->min);
         return;
     }
 
@@ -829,14 +821,6 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		debug_freq = policy->max;
 
 		dbs_freq_increase(policy, debug_load, policy->max);
-
-        CPU_DEBUG_PRINTK(CPU_DEBUG_GOVERNOR,
-                         " cpu%d,"
-                         " load=%3u, iowait=%3u,"
-                         " freq=%7u(%7u), min_freq=%7u",
-                         policy->cpu,
-                         debug_load, debug_iowait,
-                         debug_freq, policy->cur, policy->min);
 
 #else
 		if (counter < 5) {
@@ -920,15 +904,6 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		}
 
         dbs_freq_increase(policy, debug_load, debug_freq);
-
-        CPU_DEBUG_PRINTK(CPU_DEBUG_GOVERNOR,
-                         " cpu%d,"
-                         " load=%3u, iowait=%3u,"
-                         " freq=%7u(%7u), counter=%d, phase=%d, min_freq=%7u",
-                         policy->cpu,
-                         debug_load, debug_iowait,
-                         debug_freq, policy->cur, counter, phase, policy->min);
-
 #endif
 		return;
 	}
@@ -1009,25 +984,6 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		}
 
         trace_cpufreq_interactive_down (policy->cpu, debug_freq, policy->cur);
-
-#ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
-        CPU_DEBUG_PRINTK(CPU_DEBUG_GOVERNOR,
-                         " cpu%d,"
-                         " load=%3u, iowait=%3u,"
-                         " freq=%7u(%7u), counter=%d, phase=%d, min_freq=%7u",
-                         policy->cpu,
-                         debug_load, debug_iowait,
-                         debug_freq, policy->cur, counter, phase, policy->min);
-#else
-        CPU_DEBUG_PRINTK(CPU_DEBUG_GOVERNOR,
-                         " cpu%d,"
-                         " load=%3u, iowait=%3u,"
-                         " freq=%7u(%7u), min_freq=%7u",
-                         policy->cpu,
-                         debug_load, debug_iowait,
-                         debug_freq, policy->cur, policy->min);
-
-#endif
 	}
 }
 

@@ -37,7 +37,6 @@
 #include <linux/earlysuspend.h>
 #include <linux/spinlock.h>
 #include <linux/workqueue.h>
-#include <linux/cpu_debug.h>
 
 #include <asm/system.h>
 
@@ -50,10 +49,8 @@
 #include "dvfs.h"
 #include "pm.h"
 
-extern unsigned int get_powersave_freq();
 /* Symbol to store resume resume */
 extern unsigned long long wake_reason_resume;
-static spinlock_t user_cap_lock;
 struct work_struct htc_suspend_resume_work;
 
 /* tegra throttling and edp governors require frequencies in the table
@@ -100,22 +97,6 @@ module_param_cb(force_policy_max, &policy_ops, &force_policy_max, 0644);
 
 
 static unsigned int cpu_user_cap;
-
-void htc_set_cpu_user_cap(const unsigned int value)
-{
-	unsigned long flags = 0;
-	spin_lock_irqsave(&user_cap_lock, flags);
-	cpu_user_cap = value;
-	spin_unlock_irqrestore(&user_cap_lock, flags);
-}
-
-void htc_get_cpu_user_cap(unsigned int *value)
-{
-	unsigned long flags = 0;
-	spin_lock_irqsave(&user_cap_lock, flags);
-	*value = cpu_user_cap;
-	spin_unlock_irqrestore(&user_cap_lock, flags);
-}
 
 static inline void _cpu_user_cap_set_locked(void)
 {
@@ -174,18 +155,6 @@ static unsigned int user_cap_speed(unsigned int requested_speed)
 		return cpu_user_cap;
 	return requested_speed;
 }
-
-#if 1
-static unsigned int powersave_speed(unsigned int requested_speed)
-{
-	if ((get_powersave_freq()) && (requested_speed > get_powersave_freq()))
-		return get_powersave_freq();
-	return requested_speed;
-}
-
-#else
-#define powersave_speed(requested_speed) (requested_speed)
-#endif
 
 #ifdef CONFIG_TEGRA_THERMAL_THROTTLE
 
@@ -416,7 +385,7 @@ static void tegra_cpu_edp_init(bool resume)
 	if(hboot_temp >= 75){
 		freq = 640000;
 		printk(KERN_INFO "[TMS] HBootTemp= %lu > 75 , set freq = %d \n", hboot_temp, freq);
-		htc_set_cpu_user_cap(freq);
+		tegra_cpu_user_cap_set(freq);
 	}
 
 	if (!(cpu_edp_limits || system_edp_limits)) {
@@ -555,17 +524,12 @@ int tegra_update_cpu_speed(unsigned long rate)
 				pr_err("[cpufreq] can not nice(-20)!!");
 			}
 
-			CPU_DEBUG_PRINTK(CPU_DEBUG_HOTPLUG,
-					 " leave LPCPU (%s)", __func__);
-
 			/* set rate to max of LP mode */
 			ret = clk_set_rate(cpu_clk, 475000 * 1000);
 
-                        MF_DEBUG("00UP0039");
 			/* change to g mode */
 			clk_set_parent(cpu_clk, cpu_g_clk);
 
-                        MF_DEBUG("00UP0040");
 			/* restore the target frequency, and
 			 * let the rest of the function handle
 			 * the frequency scale up
@@ -579,14 +543,12 @@ int tegra_update_cpu_speed(unsigned long rate)
 	 * This sets the minimum frequency, display or avp may request higher
 	 */
 	if (freqs.old < freqs.new) {
-                MF_DEBUG("00UP0041");
 		ret = tegra_update_mselect_rate(freqs.new);
 		if (ret) {
 			pr_err("cpu-tegra: Failed to scale mselect for cpu"
 			       " frequency %u kHz\n", freqs.new);
 			goto error;
 		}
-                MF_DEBUG("00UP0042");
 		ret = clk_set_rate(emc_clk, tegra_emc_to_cpu_ratio(freqs.new));
 		if (ret) {
 			pr_err("cpu-tegra: Failed to scale emc for cpu"
@@ -595,19 +557,14 @@ int tegra_update_cpu_speed(unsigned long rate)
 		}
 	}
 
-        MF_DEBUG("00UP0043");
 	for_each_online_cpu(freqs.cpu)
 		cpufreq_notify_transition(&freqs, CPUFREQ_PRECHANGE);
-
-	CPU_DEBUG_PRINTK(CPU_DEBUG_FREQ, " transition: %7u --> %7u",
-			 freqs.old, freqs.new);
 
 #ifdef CONFIG_CPU_FREQ_DEBUG
 	printk(KERN_DEBUG "cpufreq-tegra: transition: %u --> %u\n",
 	       freqs.old, freqs.new);
 #endif
 
-        MF_DEBUG("00UP0044");
 	ret = clk_set_rate(cpu_clk, freqs.new * 1000);
 	if (ret) {
 		pr_err("cpu-tegra: Failed to set cpu frequency to %d kHz\n",
@@ -615,7 +572,6 @@ int tegra_update_cpu_speed(unsigned long rate)
 		goto error;
 	}
 
-        MF_DEBUG("00UP0045");
 	for_each_online_cpu(freqs.cpu)
 		cpufreq_notify_transition(&freqs, CPUFREQ_POSTCHANGE);
 
@@ -623,7 +579,7 @@ int tegra_update_cpu_speed(unsigned long rate)
 		clk_set_rate(emc_clk, tegra_emc_to_cpu_ratio(freqs.new));
 		tegra_update_mselect_rate(freqs.new);
 	}
-        MF_DEBUG("00UP0046");
+
 error:
 	if (orig_nice != task_nice(current)) {
 		if (can_nice(current, orig_nice)) {
@@ -634,7 +590,6 @@ error:
 		}
 	}
 
-        MF_DEBUG("00UP0047");
 	return ret;
 }
 
@@ -693,24 +648,15 @@ int tegra_cpu_set_speed_cap(unsigned int *speed_cap)
 	if (is_suspended)
 		return -EBUSY;
 
-    MF_DEBUG("00UP0030");
 	new_speed = tegra_throttle_governor_speed(new_speed);
-    MF_DEBUG("00UP0031");
 	new_speed = edp_governor_speed(new_speed);
-    MF_DEBUG("00UP0032");
 	new_speed = user_cap_speed(new_speed);
-    MF_DEBUG("00UP0033");
-	new_speed = powersave_speed(new_speed);
-    MF_DEBUG("00UP0034");
-
 	if (speed_cap)
 		*speed_cap = new_speed;
 
 	ret = tegra_update_cpu_speed(new_speed);
-	MF_DEBUG("00UP0049");
 	if (ret == 0)
 		tegra_auto_hotplug_governor(new_speed, false);
-	MF_DEBUG("00UP0050");
 	return ret;
 }
 
@@ -724,7 +670,6 @@ int tegra_suspended_target(unsigned int target_freq)
 	/* apply only "hard" caps */
 	new_speed = tegra_throttle_governor_speed(new_speed);
 	new_speed = edp_governor_speed(new_speed);
-	new_speed = powersave_speed(new_speed);
 
 	return tegra_update_cpu_speed(new_speed);
 }
@@ -742,7 +687,6 @@ int tegra_input_boost (
     target_freq = tegra_throttle_governor_speed(target_freq);
     target_freq = edp_governor_speed(target_freq);
     target_freq = user_cap_speed(target_freq);
-    target_freq = powersave_speed(target_freq);
 
     /* dont need to boost cpu at this moment */
     if (!curfreq || curfreq >= target_freq) {
@@ -751,11 +695,6 @@ int tegra_input_boost (
     }
 
     target_cpu_speed[cpu] = target_freq;
-
-    CPU_DEBUG_PRINTK(CPU_DEBUG_FREQ,
-                     " cpu%d input_boost_speed: %7u",
-                     cpu,
-                     target_freq);
 
     /* will auto. round-rate */
     ret = tegra_update_cpu_speed(target_freq);
@@ -785,9 +724,6 @@ static int tegra_target(struct cpufreq_policy *policy,
 	freq = freq_table[idx].frequency;
 
 	target_cpu_speed[policy->cpu] = freq;
-
-	CPU_DEBUG_PRINTK(CPU_DEBUG_FREQ, " cpu%d target_speed: %7u",
-			 policy->cpu, freq);
 	ret = tegra_cpu_set_speed_cap(&new_speed);
 _out:
 	mutex_unlock(&tegra_cpu_lock);

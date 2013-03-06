@@ -28,8 +28,6 @@ unsigned int tegra_count_slow_cpus(unsigned long speed_limit);
 unsigned int tegra_get_slowest_cpu_n(void);
 unsigned long tegra_cpu_lowest_speed(void);
 unsigned long tegra_cpu_highest_speed(void);
-void htc_set_cpu_user_cap(const unsigned int);
-void htc_get_cpu_user_cap(unsigned int*);
 
 #ifdef CONFIG_TEGRA_THERMAL_THROTTLE
 int tegra_throttle_init(struct mutex *cpu_lock);

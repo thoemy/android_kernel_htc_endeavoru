@@ -427,6 +427,8 @@ static ssize_t store_##file_name					\
 	ret = sscanf(buf, "%u", &new_policy.object);			\
 	if (ret != 1)							\
 		return -EINVAL;						\
+        printk(KERN_DEBUG "cpu-tegra: Setting " #file_name "to %u\n",   \
+               new_policy.object);                                      \
 									\
 	ret = __cpufreq_set_policy(policy, &new_policy);		\
 	policy->user_policy.object = new_policy.object;			\
@@ -1727,7 +1729,7 @@ static int __cpufreq_set_policy(struct cpufreq_policy *data,
 	qmax = max((unsigned int)pm_qos_request(PM_QOS_CPU_FREQ_MAX),
 		   data->user_policy.min);
 
-	pr_debug("setting new policy for CPU %u: %u - %u (%u - %u) kHz\n",
+	pr_info("setting new policy for CPU %u: %u - %u (%u - %u) kHz\n",
 		policy->cpu, pmin, pmax, qmin, qmax);
 
 	/* clamp the new policy to PM QoS limits */
