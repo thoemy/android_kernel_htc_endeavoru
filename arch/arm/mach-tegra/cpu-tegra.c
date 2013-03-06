@@ -896,51 +896,35 @@ static struct cpufreq_driver tegra_cpufreq_driver = {
 
 static void tegra_cpufreq_powersave_early_suspend(struct early_suspend *h)
 {
-	MF_DEBUG("00250000");
 	if(perf_early_suspend == 0){
 		pr_info("tegra_cpufreq_powersave_early_suspend: cap cpu freq to 475MHz\n");
-	MF_DEBUG("00250001");
 		pm_qos_update_request(&cap_cpu_freq_req, (s32)CAP_CPU_FREQ_MAX);
-	MF_DEBUG("00250002");
 		CAP_CPU_FREQ_TARGET = CAP_CPU_FREQ_MAX;
 	}
 
 	enter_early_suspend = 1;
 
 #ifdef CONFIG_TEGRA_CONSERVATIVE_GOV_ON_EARLY_SUSPEND
-	MF_DEBUG("00250003");
 	cpufreq_save_governor();
-	MF_DEBUG("00250004");
 	cpufreq_set_governor(CONSERVATIVE_GOVERNOR);
-	MF_DEBUG("00250005");
 	cpufreq_set_governor_param(CONSERVATIVE_GOVERNOR, UP_THRESHOLD,
 					UP_THRESHOLD_VALUE);
-	MF_DEBUG("00250006");
 	cpufreq_set_governor_param(CONSERVATIVE_GOVERNOR, DOWN_THRESHOLD,
 					DOWN_THRESHOLD_VALUE);
-	MF_DEBUG("00250007");
 	cpufreq_set_governor_param(CONSERVATIVE_GOVERNOR, FREQ_STEP,
 					FREQ_STEP_VALUE);
 #elif defined CONFIG_TEGRA_INTERACTIVE_GOV_ON_EARLY_SUSPEND
-	MF_DEBUG("00250008");
 	cpufreq_save_governor();
-	MF_DEBUG("00250009");
 	cpufreq_set_governor(INTERACTIVE_GOVERNOR);
-	MF_DEBUG("00250010");
 	cpufreq_set_governor_param(INTERACTIVE_GOVERNOR, BOOST_FACTOR,
 					BOOST_FACTOR_VALUE);
-	MF_DEBUG("00250011");
 	cpufreq_set_governor_param(INTERACTIVE_GOVERNOR, GO_MAXSPEED_LOAD,
 					GO_MAXSPEED_LOAD_VALUE);
-	MF_DEBUG("00250012");
 	cpufreq_set_governor_param(INTERACTIVE_GOVERNOR, MAX_BOOST,
 					MAX_BOOST_VALUE);
-	MF_DEBUG("00250013");
 	cpufreq_set_governor_param(INTERACTIVE_GOVERNOR, SUSTAIN_LOAD,
 					SUSTAIN_LOAD_VALUE);
 #endif
-	MF_DEBUG("00250014");
-
 }
 static void tegra_cpufreq_powersave_late_resume(struct early_suspend *h)
 {
