@@ -32,7 +32,7 @@
 /* Google systrace just supports Interactive governor (option -l)
  * Just backport Interactive trace points for Ondemand governor use
  */
-#define CREATE_TRACE_POINTS
+//#define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_interactive.h>
 
 /*
