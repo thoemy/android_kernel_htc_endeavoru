@@ -261,5 +261,10 @@ static void __exit exit_runnables(void)
 }
 
 MODULE_LICENSE("GPL");
+#ifdef CONFIG_CPUQUIET_DEFAULT_GOV_RUNNABLE
+fs_initcall(init_runnables);
+#else
+module_init(init_runnables);
+#endif
 module_init(init_runnables);
 module_exit(exit_runnables);

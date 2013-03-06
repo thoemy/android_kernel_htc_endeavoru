@@ -32,6 +32,15 @@ config CPUQUIET_DEFAULT_GOV_BALANCED
 	  Use the CPUQuiet governor 'balanced' as default. This dynamically
 	  scales the number of cpus online in the system based on the cpu
 	  load
+
+config CPUQUIET_DEFAULT_GOV_RUNNABLE
+	bool "runnable"
+	select CPUQUIET_GOVERNOR_RUNNABLE
+	depends on CPU_FREQ
+	help
+	  Use the CPUQuiet governor 'runnable' as default. This dynamically
+	  scales the number of cpus online in the system based on the number
+          of running threads.
 endchoice
 
 endif
