@@ -1223,12 +1223,6 @@ static void dbs_refresh_callback_ondemand(struct work_struct *unused)
 	unlock_policy_rwsem_write(cpu);
 }
 
-#if defined(CONFIG_BEST_TRADE_HOTPLUG)
-extern void bthp_set_floor_cap (unsigned int floor_freq,
-                                cputime64_t floor_time
-                                );
-#endif
-
 static DECLARE_WORK(dbs_refresh_work, dbs_refresh_callback_ondemand);
 
 extern
@@ -1272,11 +1266,6 @@ static int cpufreq_ondemand_input_boost_task (
         dbs_tuners_ins.floor_freq = touch_poke_freq;
         dbs_tuners_ins.floor_valid_time =
             ktime_to_ns(ktime_get()) + dbs_tuners_ins.input_boost_duration;
-
-#if defined(CONFIG_BEST_TRADE_HOTPLUG)
-        bthp_set_floor_cap (dbs_tuners_ins.floor_freq,
-                            dbs_tuners_ins.floor_valid_time);
-#endif
 
         if (lock_policy_rwsem_write(cpu) < 0)
             continue;

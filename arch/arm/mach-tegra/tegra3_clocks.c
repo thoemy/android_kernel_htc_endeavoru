@@ -924,30 +924,6 @@ static int tegra3_cpu_clk_set_rate(struct clk *c, unsigned long rate)
 		goto out;
 	}
 
-#if defined(CONFIG_BEST_TRADE_HOTPLUG)
-    {
-        extern unsigned long *t_rate;
-        extern bool is_bthp_en (void);
-
-        if (likely(is_bthp_en ())) {
-            atomic_set((atomic_t *)&lt_rate, rate / 1000);
-            barrier();
-
-            /* for NV platform, all G cores consume the same clk source
-             *
-             * to port to any othe platforms,
-             * pls. modify t_rate to t_rate[NR_CPUS] accordingly
-             */
-            if (unlikely(!atomic_cmpxchg ((atomic_t *)&t_rate,
-                                          (int)NULL,
-                                          (int)&lt_rate)))
-            {
-                pr_bthp_info ("lt_rate is skirted...\n");
-            }
-        }
-    }
-#endif
-
 out:
 	if (skipped) {
 		udelay(skipper_delay);
